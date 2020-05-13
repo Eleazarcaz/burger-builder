@@ -4,7 +4,7 @@ import Auxiliar from '../../hoc/auxiliar';
 
 const Layout = (props) => (
   <Auxiliar>
-    <div>Toolbart, SideDrawer, Backdrop </div>
+    <div>Toolbar, SideDrawer, Backdrop </div>
     <main className={classes.Content}>{props.children}</main>
   </Auxiliar>
 );
