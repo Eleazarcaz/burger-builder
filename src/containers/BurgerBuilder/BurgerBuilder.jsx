@@ -17,17 +17,20 @@ const INGREDIENTS_PRICES = {
 
 class BurgerBuilder extends React.Component {
   state = {
-    ingredients: {
-      salad: 0,
-      bacon: 0,
-      cheese: 0,
-      meat: 0,
-    },
+    ingredients: null,
     totalPrice: 4,
     purchaseable: false,
     purchasing: false,
     loading: false,
+    error: null,
   };
+
+  componentDidMount() {
+    axios
+      .get('/ingredients.json')
+      .then((response) => this.setState({ ingredients: response.data }))
+      .catch((error) => this.setState({ error }));
+  }
 
   updatePuchaseState(ingredients) {
     const sum = Object.keys(ingredients)
@@ -106,14 +109,37 @@ class BurgerBuilder extends React.Component {
       disabledInfo[key] = disabledInfo[key] <= 0;
     }
 
-    let orderSummary = (
-      <OrderSummary
-        price={this.state.totalPrice}
-        purchaseCancel={this.purchaseCancelHandler}
-        purchaseContinue={this.purchaseContinueHandler}
-        ingredients={this.state.ingredients}
-      />
+    let orderSummary = null;
+    let burger = this.state.error ? (
+      <p>ingredients can't be loaded</p>
+    ) : (
+      <Spinner />
     );
+
+    if (this.state.ingredients) {
+      burger = (
+        <Auxiliar>
+          <Burger ingredients={this.state.ingredients} />
+          <BuildControls
+            ingredientAdded={this.addIngredientHandler}
+            ingredientRemoved={this.removeIngredientHandler}
+            disabled={disabledInfo}
+            price={this.state.totalPrice}
+            purchaseable={!this.state.purchaseable}
+            ordered={this.purchaseHandler}
+          ></BuildControls>
+        </Auxiliar>
+      );
+
+      orderSummary = (
+        <OrderSummary
+          price={this.state.totalPrice}
+          purchaseCancel={this.purchaseCancelHandler}
+          purchaseContinue={this.purchaseContinueHandler}
+          ingredients={this.state.ingredients}
+        />
+      );
+    }
 
     if (this.state.loading) {
       orderSummary = <Spinner />;
@@ -127,15 +153,7 @@ class BurgerBuilder extends React.Component {
         >
           {orderSummary}
         </Modal>
-        <Burger ingredients={this.state.ingredients} />
-        <BuildControls
-          ingredientAdded={this.addIngredientHandler}
-          ingredientRemoved={this.removeIngredientHandler}
-          disabled={disabledInfo}
-          price={this.state.totalPrice}
-          purchaseable={!this.state.purchaseable}
-          ordered={this.purchaseHandler}
-        ></BuildControls>
+        {burger}
       </Auxiliar>
     );
   }
